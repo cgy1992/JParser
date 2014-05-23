@@ -8,7 +8,7 @@ import com.sun.source.tree.VariableTree;
 
 public class MethodNode {
 	private MethodTree node;
-	private String filename, classname;
+	public String filename, classname;
 	
 	public MethodNode(MethodTree _node) {
 		node = _node;

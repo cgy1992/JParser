@@ -30,34 +30,51 @@ public class JParser {
 			filename = _filename;
 		}
 	}
-	private JCCompilationUnit unit;
+	private List<UnitFilePair> units;
 	
 	public JParser() {
 		Context context = new Context();
 		JavacFileManager.preRegister(context);
 		factory = ParserFactory.instance(context);		
 		
-		unit = null;
+		units = new ArrayList<UnitFilePair>();
 	}
 
 	public void parse(String filename) throws IOException {
 		String f = processConstructor(readFile(filename).toString());
 		Parser parser = factory.newParser(f, true, false, true);
-		unit = parser.parseCompilationUnit();
+		units.add(new UnitFilePair(parser.parseCompilationUnit(), filename));
 	}
 	
-	public void parseDir(String d) {
+	public void parseDir(String d) throws IOException {
 		File dir = new File(d);
 		
+		if (!dir.exists()) {
+			return;
+		}
+		if (dir.isFile()) {
+			parse(dir.getPath());
+			return;
+		}
 		
+		for(File x : dir.listFiles()){
+			parseDir(x.getPath());
+		}
 	}
 
 	public List<MethodNode> getMethodNodes() {
 		List<MethodNode> ret = new ArrayList<MethodNode>();
 		MethodScanner scanner = new MethodScanner();
 //		ret = scanner.visitCompilationUnit(unit, new ArrayList<MethodNode>());
-		scanner.visitCompilationUnit(unit, ret);
-		System.out.println(ret.size());  
+//		scanner.visitCompilationUnit(unit, ret);
+		
+		for(UnitFilePair x : units) {
+			int i = ret.size();
+			scanner.visitCompilationUnit(x.unit, ret);
+			while(i<ret.size()) {
+				ret.get(i++).filename = x.filename;
+			}
+		}
 		
 		return ret;
 	}
@@ -67,8 +84,6 @@ public class JParser {
 		@Override
 		public List<MethodNode> visitMethod(MethodTree node, List<MethodNode> p) {
 			p.add(new MethodNode(node));
-			System.out.println(node.getName());
-			System.out.println(p.size());
 			return p;
 		}
 	}
