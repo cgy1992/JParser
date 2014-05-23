@@ -12,7 +12,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.Tree;
 import com.sun.source.util.TreeScanner;
 import com.sun.tools.javac.file.JavacFileManager;
 import com.sun.tools.javac.parser.Parser;
@@ -53,7 +55,10 @@ public class JParser {
 			return;
 		}
 		if (dir.isFile()) {
-			parse(dir.getPath());
+			String filename = dir.getName();
+			String ext = filename.substring(filename.lastIndexOf(".")+1);
+			if(ext.toLowerCase().equals("java"))
+				parse(dir.getPath());
 			return;
 		}
 		
@@ -62,17 +67,16 @@ public class JParser {
 		}
 	}
 
-	public List<MethodNode> getMethodNodes() {
+	public List<MethodNode> getMethodNodes() throws IOException {
 		List<MethodNode> ret = new ArrayList<MethodNode>();
-		MethodScanner scanner = new MethodScanner();
-//		ret = scanner.visitCompilationUnit(unit, new ArrayList<MethodNode>());
-//		scanner.visitCompilationUnit(unit, ret);
+		ClassScanner scanner = new ClassScanner();
 		
 		for(UnitFilePair x : units) {
 			int i = ret.size();
 			scanner.visitCompilationUnit(x.unit, ret);
-			while(i<ret.size()) {
-				ret.get(i++).filename = x.filename;
+			while(i < ret.size()) {
+				MethodNode m = ret.get(i++);
+				m.filename = x.filename;
 			}
 		}
 		
@@ -80,10 +84,24 @@ public class JParser {
 	}
 
 	
-	private class MethodScanner extends TreeScanner<List<MethodNode>, List<MethodNode>> {
+	private class ClassScanner extends TreeScanner<List<MethodNode>, List<MethodNode>> {
 		@Override
-		public List<MethodNode> visitMethod(MethodTree node, List<MethodNode> p) {
-			p.add(new MethodNode(node));
+		public List<MethodNode> visitClass(ClassTree node, List<MethodNode> p) {
+			for(Tree x : node.getMembers()) {
+				if(x.getKind() == Tree.Kind.METHOD) {
+					MethodNode m = new MethodNode((MethodTree) x);
+					m.classname = node.getSimpleName().toString();
+					p.add(m);
+				}
+				
+				if(x.getKind() == Tree.Kind.CLASS) {
+					List<MethodNode> tmp = new ArrayList<MethodNode>();
+					ClassScanner scanner = new ClassScanner();
+					scanner.visitClass((ClassTree)x, tmp);
+					p.addAll(tmp);
+				}
+			}
+			
 			return p;
 		}
 	}

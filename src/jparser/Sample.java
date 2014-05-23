@@ -10,9 +10,13 @@ public class Sample {
 		JParser tmp = new JParser();
 		tmp.parseDir("./data/");
 		List<MethodNode> methods = tmp.getMethodNodes();
-		
+
 		for (MethodNode x : methods) {
-			System.out.println(x.getFilename() + " " + x.getName() + " " + x.getStatementCount());
+			System.out.println(x.getFilename() + " " 
+					+ x.getClassname() + " "
+					+ x.getReturnType() + " "
+					+ x.getName() + " " 
+					+ x.getBlockCount());
 		}
 	}
 }

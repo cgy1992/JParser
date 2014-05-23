@@ -30,6 +30,10 @@ public class MethodNode {
 		return node.getName().toString();
 	}
 	
+	public String getBody() {
+		return node.getBody().toString();
+	}
+	
 	public List<String> getNameParts() {
 		List<String> ret = new ArrayList<String>();
 		
