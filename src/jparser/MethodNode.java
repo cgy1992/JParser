@@ -8,10 +8,13 @@ import com.sun.source.tree.VariableTree;
 
 public class MethodNode {
 	private MethodTree node;
-	public String filename, classname;
+	public String name, filename, classname;
 	
 	public MethodNode(MethodTree _node) {
 		node = _node;
+		name = null;
+		filename = null;
+		classname = null;
 	}
 	
 	public String getFilename() {
@@ -23,15 +26,21 @@ public class MethodNode {
 	}
 	
 	public String getReturnType() {
-		return node.getReturnType().toString();
+		if(node.getReturnType() == null)
+			return "Constructor";
+		else
+			return node.getReturnType().toString();
 	}
 	
 	public String getName() {
-		return node.getName().toString();
+		return name;
 	}
 	
 	public String getBody() {
-		return node.getBody().toString();
+		if(node.getBody() != null )
+			return node.getBody().toString();
+		else
+			return null;
 	}
 	
 	public List<String> getNameParts() {
@@ -91,7 +100,10 @@ public class MethodNode {
 	
 	public int getBlockCount() {
 		int num = 0;
-		String str = node.getBody().toString();
+		String str = getBody();
+		if (str == null)
+			return 0;
+		
 		for(int i = 0; i < str.length(); i++) {
 			if (str.charAt(i) == '{') {
 				num++;
@@ -103,7 +115,10 @@ public class MethodNode {
 	
 	public int getStatementCount() {
 		int num = 0;
-		String str = node.getBody().toString();
+		String str = getBody();
+		if(str == null) 
+			return 0;
+		
 		for(int i = 0; i < str.length(); i++) {
 			if (str.charAt(i) == ';') {
 				num++;

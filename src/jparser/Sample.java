@@ -15,7 +15,8 @@ public class Sample {
 			System.out.println(x.getFilename() + " " 
 					+ x.getClassname() + " "
 					+ x.getReturnType() + " "
-					+ x.getName() + " " 
+					+ x.getNameParts() + " " 
+					+ x.getParametersType() + " "
 					+ x.getBlockCount());
 		}
 	}

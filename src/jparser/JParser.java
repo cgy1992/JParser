@@ -9,8 +9,6 @@ import java.nio.channels.FileChannel.MapMode;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
@@ -43,7 +41,8 @@ public class JParser {
 	}
 
 	public void parse(String filename) throws IOException {
-		String f = processConstructor(readFile(filename).toString());
+//		String f = processConstructor(readFile(filename).toString());
+		String f = readFile(filename).toString();
 		Parser parser = factory.newParser(f, true, false, true);
 		units.add(new UnitFilePair(parser.parseCompilationUnit(), filename));
 	}
@@ -91,6 +90,11 @@ public class JParser {
 				if(x.getKind() == Tree.Kind.METHOD) {
 					MethodNode m = new MethodNode((MethodTree) x);
 					m.classname = node.getSimpleName().toString();
+					if(((MethodTree)x).getName().toString().equals("<init>")){
+						m.name = m.classname;
+					} else {
+						m.name = ((MethodTree)x).getName().toString();
+					}
 					p.add(m);
 				}
 				
@@ -112,37 +116,5 @@ public class JParser {
 		ByteBuffer buffer = ch.map(MapMode.READ_ONLY, 0, ch.size());
 		fin.close();
 		return Charset.defaultCharset().decode(buffer);
-	}
-	
-	private String processConstructor(String f) {
-		String ret = f;
-		List<String> cs = getClassList(f);
-		
-		for(String x : cs) {
-			Pattern pattern = Pattern.compile("\\b"+x+"\\s*\\(.*\\)\\s*\\{");	
-			Matcher matcher = pattern.matcher(ret);
-			while(matcher.find()){
-				String tmp = ret.substring(matcher.start(), matcher.end());
-				ret = matcher.replaceAll("Constructor " + tmp);
-			}
-		}
-		
-		return ret;
-	}
-	
-	private List<String> getClassList(String f) {
-		List<String> ret = new ArrayList<String>();
-		
-		Pattern pattern = Pattern.compile("\\bclass\\b.*\\s*\\{");
-		Matcher matcher = pattern.matcher(f);
-		while(matcher.find()) {
-			String tmp = f.substring(matcher.start(), matcher.end());
-			int i = tmp.indexOf("class");
-			i += 6;
-			int end = tmp.indexOf(" ", i);
-			ret.add(tmp.substring(i, end));
-		}
-		
-		return ret;
 	}
 }
